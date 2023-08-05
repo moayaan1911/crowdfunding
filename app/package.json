@@ -3,8 +3,12 @@
   "private": false,
   "version": "1.0.0",
   "type": "module",
-  "license":"MIT",
-  "author": {"email": "ayaangames@gmail.com", "name": "Mohammad Ayaan Siddiqui", "url": "https://linktr.ee/ayaaneth"},
+  "license": "MIT",
+  "author": {
+    "email": "ayaangames@gmail.com",
+    "name": "Mohammad Ayaan Siddiqui",
+    "url": "https://linktr.ee/ayaaneth"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@thirdweb-dev/chains": "^0.1.42",
     "@thirdweb-dev/react": "^3.14.25",
     "@thirdweb-dev/sdk": "^3.10.44",
     "ethers": "^5",
