@@ -10,6 +10,7 @@ export default function Banner() {
         <a
           href="https://polygon.technology/polygon-zkevm"
           className="underline text-purple-600 font-thin"
+          target="_blank"
         >
           Polygon zkEVM
         </a>
