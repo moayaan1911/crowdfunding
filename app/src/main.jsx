@@ -2,7 +2,20 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ThirdwebProvider } from "@thirdweb-dev/react";
 import App from "./App.jsx";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
+import Details from "./components/Details.jsx";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+  },
+  {
+    path: "/details/:id",
+    element: <Details />,
+  },
+]);
 const activeChain = {
   chainId: 1442,
   rpc: ["https://polygon-zkevm-testnet.rpc.thirdweb.com"],
@@ -28,7 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       supportedChains={[activeChain]}
       autoConnect={false}
     >
-      <App />
+      <RouterProvider router={router} />
     </ThirdwebProvider>
   </React.StrictMode>
 );

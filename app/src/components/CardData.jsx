@@ -1,6 +1,9 @@
 import React from "react";
+import Details from "./Details";
+import { useNavigate } from "react-router-dom";
 
 const Card = ({ data }) => {
+  const navigate = useNavigate();
   return (
     <div className="max-w-xs mx-auto bg-white rounded-lg shadow-md overflow-hidden">
       <div className="relative">
@@ -14,6 +17,16 @@ const Card = ({ data }) => {
             className="bg-white text-pink-400 rounded-lg px-2 py-1 
                         hover:bg-gradient-to-r from-pink-100 to-pink-700 hover:text-black 
                         transition duration-500"
+            onClick={() =>
+              navigate(`/details/${data.id}`, {
+                state: {
+                  title: data.title,
+                  imageUrl: data.imageUrl,
+                  description: data.description,
+                  createdAt: data.createdAt,
+                },
+              })
+            }
           >
             Details
           </button>
