@@ -1,6 +1,10 @@
 import React from "react";
 import Card from "./CardData";
+import { useAddress } from "@thirdweb-dev/react";
+import { Toaster, toast } from "react-hot-toast";
 export default function ActiveCampaigns() {
+  const address = useAddress();
+  console.log("address active campaigns", address);
   const dataSets = [
     {
       id: 1,
@@ -54,14 +58,38 @@ export default function ActiveCampaigns() {
       createdAt: "March 10, 2022 8:30am",
     },
   ];
+
+  async function checkWalletConnect() {
+    toast.error("Wallet not connected");
+    if (!address) {
+      return;
+    }
+  }
+
   return (
-    <div className="mt-20 md:text-left text-center">
-      <h1 className="font-bold text-5xl md:mx-16 my-5">Active Campaigns:</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
-        {dataSets.map((data) => (
-          <Card key={data.id} data={data} />
-        ))}
+    <>
+      <Toaster />
+      <div className="mt-20 md:text-left text-center">
+        <div className="flex md:w-full md:justify-between justify-center mx-auto flex-wrap-reverse w-1/2">
+          <h1 className="md:text-4xl md:font-semibold  md:mx-20 text-xl md:p-0 py-5">
+            Active Campaigns:
+          </h1>
+          <button className="relative md:mx-20 rounded-xl border-4 overflow-hidden group p-2 text-pink-500 font-semibold hover:text-white">
+            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+            <div className="absolute w-full h-full   bg-pink-500 left-0 top-0 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+            <span className="relative z-10" onClick={checkWalletConnect}>
+              Create Campaign
+            </span>
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
+          {dataSets.map((data) => (
+            <Card key={data.id} data={data} />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
