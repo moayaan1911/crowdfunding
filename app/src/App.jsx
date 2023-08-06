@@ -42,6 +42,7 @@ export default function App() {
     <div>
       <Navbar />
       <Banner />
+      <ActiveCampaigns />
     </div>
   );
 }
