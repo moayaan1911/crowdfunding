@@ -45,22 +45,9 @@ module.exports = {
     //   url: process.env.RPC_URL,
     //   accounts: [process.env.PRIVATE_KEY],
     // },
-    // zkevmtestnet: {
-    //   url: process.env.RPC_URL,
-    //   accounts: [process.env.PRIVATE_KEY],
-    // },
-  },
-  etherscan: {
-    apiKey: {
-      // @dev Uncomment the network you want to use
-      // polygonMumbai: process.env.ETHERSCAN_API_KEY,
-      // sepolia: process.env.ETHERSCAN_API_KEY,
-      // arbitrumOne: process.env.ETHERSCAN_API_KEY, // arbitrum
-      // optimisticEthereum: process.env.ETHERSCAN_API_KEY, // optimism
-      // polygon: process.env.ETHERSCAN_API_KEY,
-      // mainnet: process.env.ETHERSCAN_API_KEY, // eth
-      // bsc: process.env.ETHERSCAN_API_KEY,
-      // bsctest: process.env.ETHERSCAN_API_KEY,
+    zkevmtestnet: {
+      url: process.env.RPC_URL,
+      accounts: [process.env.PRIVATE_KEY],
     },
   },
   gasReporter: {

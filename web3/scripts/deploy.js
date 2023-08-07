@@ -1,36 +1,15 @@
 const hre = require("hardhat");
 
 async function main() {
-   const SimpleStorage = await hre.ethers.getContractFactory("SimpleStorage");
-   const simpleStorage = await SimpleStorage.deploy();
-   await simpleStorage.deployed();
+  const Crowdfunding = await hre.ethers.getContractFactory("CrowdFunding");
+  const crowdfunding = await Crowdfunding.deploy();
+  await crowdfunding.deployed();
 
-  console.log(`Deployed to address ${simpleStorage.address}`);
-
-  // add ETHERSCAN_API_KEY and deploy on network OTHER than hardhat
-  if (hre.network.name !== "hardhat" && process.env.ETHERSCAN_API_KEY) {
-    await simpleStorage.deployTransaction.wait(6);
-    verify(simpleStorage.address, []);
-  }
+  console.log(`Deployed to address ${crowdfunding.address}`);
 }
-const verify = async (contractAddress, args) => {
-  console.log("Verifying contract...");
-  try {
-    await run("verify:verify", {
-      address: contractAddress,
-      constructorArguments: args,
-    });
-  } catch (e) {
-    if (e.message.toLowerCase().includes("already verified")) {
-      console.log("Already Verified!");
-    } else {
-      console.log(e);
-    }
-  }
-};
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+
+// Deployed on zkevm testnet on :-https://testnet-zkevm.polygonscan.com/address/0x0A87AEf652cb24350880de80c000d791071a7ee6
