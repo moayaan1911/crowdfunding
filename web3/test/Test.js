@@ -14,168 +14,252 @@ describe("CrowdFunding", function () {
   });
 
   describe("Campaigns", function () {
-    it("Should create a new campaign", async function () {
-      const tx = await crowdFunding
-        .connect(owner)
-        .createCampaign("Test Campaign", "Description", "ImageCID", 100, 10);
-      await tx.wait();
+    it("Should Create a new campaign", async () => {
+      const title = "Test Campaign";
+      const description = "Campaign description";
+      const imageCid = "image.jpg";
+      const target = ethers.utils.parseEther("1000");
+      const duration = 7 * 24 * 60 * 60; // 7 days in seconds
+      // Calculate end date
 
-      const campaigns = await crowdFunding.getAllCampaigns();
-      expect(campaigns.length).to.equal(1);
-      expect(campaigns[0].campaignTitle).to.equal("Test Campaign");
-    });
-
-    it("Should get campaign by id", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 2", "Desc", "CID", 200, 10);
-
-      const campaign = await crowdFunding.getCampaignById(0);
-      expect(campaign.campaignTitle).to.equal("Test 2");
-    });
-
-    it("Should return the owner of a campaign", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 3", "Desc", "CID", 200, 10);
-      expect(await crowdFunding.connect(owner).getOwnerOfACampaign(0)).to.equal(
-        owner.address
+      await crowdFunding.createCampaign(
+        title,
+        description,
+        imageCid,
+        target,
+        duration
       );
+
+      const campaign = await crowdFunding.getParticularCampaign(0);
+      const endDate = await campaign.endAt.toNumber();
+      const predictedEndDate = (await Math.floor(Date.now() / 1000)) + duration;
+      await expect(campaign.campaignTitle).to.equal(title);
+      await expect(campaign.campaignDescription).to.equal(description);
+      await expect(campaign.campaignImageCID).to.equal(imageCid);
+      await expect(campaign.targetAmount).to.equal(target);
+      await expect(campaign.raisedAmount).to.equal(0);
+      const fluctuation = endDate - predictedEndDate;
+      await expect(fluctuation).to.be.lessThan(500);
+      await expect(fluctuation).to.be.greaterThan(-500);
+      await expect(campaign.status).to.equal(true);
+      await expect(campaign.campaignOwner).to.equal(owner.address);
     });
 
-    it("Should get all campaigns", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 4", "Desc", "CID", 200, 10);
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 5", "Desc", "CID", 200, 10);
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 6", "Desc", "CID", 200, 10);
-
-      const campaigns = await crowdFunding.getAllCampaigns();
-      expect(campaigns.length).to.equal(3);
-    });
-
-    it("Should delete a campaign by turning status to false", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Test 7", "Desc", "CID", 200, 10);
-      await crowdFunding.connect(owner).deleteCampaign(0);
-
-      const campaigns = await crowdFunding.getAllCampaigns();
-      expect(campaigns[0].status).to.equal(false);
-    });
-  });
-
-  describe("Contributions", function () {
-    it("Should contribute to a campaign", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-
-      const contributions =
-        await crowdFunding.getAllContributionsForAParticularCampaign(0);
-
-      expect(contributions.length).to.equal(1);
-      expect(contributions[0].amount).to.equal(ethers.utils.parseEther("1.0"));
-    });
-    it("Should get all contributions for a campaign", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1") });
-      await crowdFunding
-        .connect(addr2)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("2") });
-
-      const contributions =
-        await crowdFunding.getAllContributionsForAParticularCampaign(0);
-
-      expect(contributions.length).to.equal(2);
-      expect(contributions[0].amount).to.equal(ethers.utils.parseEther("1"));
-      expect(contributions[1].amount).to.equal(ethers.utils.parseEther("2"));
-    });
-  });
-
-  describe("Claiming", function () {
-    it("Should allow owner to claim funds if target reached", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      await crowdFunding
-        .connect(addr2)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-
-      const ownerBalanceBefore = await owner.getBalance();
-
-      await crowdFunding.connect(owner).claimFunds(0);
-
-      const ownerBalanceAfter = await owner.getBalance();
-
-      expect(ownerBalanceAfter).to.be.gt(ownerBalanceBefore);
-    });
-    it("Should not allow owner to claim funds if target not reached", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
+    it("Should not allow to create a campaign with zero target", async () => {
+      const title = "Test Campaign";
+      const description = "Campaign description";
+      const imageCid = "image.jpg";
+      const target = ethers.utils.parseEther("0");
+      const duration = 6;
 
       await expect(
-        crowdFunding.connect(owner).claimFunds(0)
-      ).to.be.revertedWith("Campaign target amount not reached");
+        crowdFunding.createCampaign(
+          title,
+          description,
+          imageCid,
+          target,
+          duration
+        )
+      ).to.be.revertedWith("Target amount should be greater than 0");
     });
 
-    it("Should not allow owner to claim funds if already claimed", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      expect(
-        await crowdFunding.connect(owner).claimFunds(0)
-      ).to.be.revertedWith("Campaign is not active");
+    it(" Should not allow to create a campaign with zero duration", async () => {
+      const title = "Test Campaign";
+      const description = "Campaign description";
+      const imageCid = "aaadfasd";
+      const target = ethers.utils.parseEther("1.0");
+      const duration = 0;
+
+      await expect(
+        crowdFunding.createCampaign(
+          title,
+          description,
+          imageCid,
+          target,
+          duration
+        )
+      ).to.be.revertedWith("Duration should be greater than 0");
     });
 
-    it("Should not allow owner to claim funds if not owner", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      await crowdFunding
-        .connect(addr2)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      expect(crowdFunding.connect(addr1).claimFunds(0)).to.be.revertedWith(
-        "Only campaign owner can claim funds"
+    it("Should return the total number of campaigns ", async function () {
+      const title = "Test Campaign";
+      const description = "Campaign description";
+      const imageCid = "image.jpg";
+      const target = ethers.utils.parseEther("2.0");
+      const duration = 7 * 24 * 60 * 60; // 7 days in seconds
+      await crowdFunding.createCampaign(
+        title,
+        description,
+        imageCid,
+        target,
+        duration
+      );
+
+      const title2 = "Test Campaign 2";
+      const description2 = "Campaign description 2";
+      const imageCid2 = "image2.jpg";
+      const target2 = ethers.utils.parseEther("1.0");
+      const duration2 = 7 * 24 * 60 * 60; // 7 days in seconds
+      await crowdFunding.createCampaign(
+        title2,
+        description2,
+        imageCid2,
+        target2,
+        duration2
+      );
+
+      const totalCampaigns = await crowdFunding.totalCampaigns();
+      expect(totalCampaigns).to.equal(2);
+    });
+    it("Should return all campaigns", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      const campaigns = await crowdFunding.getCampaigns();
+      expect(campaigns.length).to.equal(2);
+    });
+
+    it("Should return active campaigns", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      const activeCampaigns = await crowdFunding.getActiveCampaigns();
+      expect(activeCampaigns.length).to.equal(2);
+    });
+    it("Should return a particular campaign", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      const campaign = await crowdFunding.getParticularCampaign(1);
+      expect(campaign.campaignTitle).to.equal("Campaign 2");
+    });
+
+    it("Should delete a campaign", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding.deleteCampaign(1);
+      const campaign = await crowdFunding.getParticularCampaign(1);
+      expect(campaign.status).to.equal(false);
+    });
+
+    it("Should not delete a campaign if not owner", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await expect(
+        crowdFunding.connect(addr1).deleteCampaign(1)
+      ).to.be.revertedWith("You are not the owner of this campaign");
+    });
+
+    it("Should not delete a campaign if not active", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding.deleteCampaign(1);
+      await expect(crowdFunding.deleteCampaign(1)).to.be.revertedWith(
+        "Campaign is already inactive"
       );
     });
-    it("Should not allow owner to claim funds if campaign end date not reached", async function () {
-      await crowdFunding
-        .connect(owner)
-        .createCampaign("Campaign 1", "Desc", "CID", 100, 10);
-      await crowdFunding
-        .connect(addr1)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      await crowdFunding
-        .connect(addr2)
-        .contributeToCampaign(0, { value: ethers.utils.parseEther("1.0") });
-      expect(crowdFunding.connect(owner).claimFunds(0)).to.be.revertedWith(
-        "Campaign end date not reached"
+
+    it("Should return inactive campaigns", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
       );
+
+      await crowdFunding.createCampaign(
+        "Campaign 2",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding.deleteCampaign(1);
+      const inactiveCampaigns = await crowdFunding.getInactiveCampaigns();
+      expect(inactiveCampaigns.length).to.equal(1);
     });
   });
 });

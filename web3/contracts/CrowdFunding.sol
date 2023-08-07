@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
+import "hardhat/console.sol";
 
 contract CrowdFunding {
     struct Campaign {
@@ -9,15 +10,13 @@ contract CrowdFunding {
         string campaignImageCID;
         uint targetAmount;
         uint raisedAmount;
-        uint endDate;
+        uint startAt;
+        uint endAt;
         bool status;
         address payable campaignOwner;
     }
 
     Campaign[] public campaigns;
-
-    // map campaign to contributor address to amount contributed
-    // mapping(uint => mapping(address => uint)) public contributions;
 
     struct Contribution {
         uint campaignId;
@@ -29,123 +28,121 @@ contract CrowdFunding {
 
     Contribution[] public contributions;
 
-    uint public campaignId = 0;
+    uint private campaignId = 0;
+
+    event CampaignCreated(uint campaignId, uint createdAt);
 
     function createCampaign(
         string memory _campaignTitle,
-        string memory campaignDescription,
+        string memory _campaignDescription,
         string memory _campaignImageCID,
         uint _targetAmount,
         uint _duration
     ) public {
+        require(_targetAmount > 0, "Target amount should be greater than 0");
+        require(_duration > 0, "Duration should be greater than 0");
         campaigns.push(
             Campaign(
                 campaignId,
                 _campaignTitle,
-                campaignDescription,
+                _campaignDescription,
                 _campaignImageCID,
                 _targetAmount,
                 0,
-                block.timestamp * (1 days) + _duration,
+                block.timestamp,
+                block.timestamp + _duration,
                 true,
                 payable(msg.sender)
             )
         );
+        emit CampaignCreated(campaignId, block.timestamp);
         campaignId++;
     }
 
-    function contributeToCampaign(uint _campaignId) public payable {
-        require(msg.value > 0, "Contribution amount must be greater than 0");
-        require(
-            campaigns[_campaignId].status == true,
-            "Campaign is not active"
-        );
-        campaigns[_campaignId].raisedAmount += msg.value;
-        contributions.push(
-            Contribution(
-                _campaignId,
-                contributions.length,
-                msg.value,
-                block.timestamp * (1 days),
-                payable(msg.sender)
-            )
-        );
+    function totalCampaigns() public view returns (uint) {
+        return campaigns.length;
     }
 
-    function getAllContributionsForAParticularCampaign(
-        uint _campaignId
-    ) public view returns (Contribution[] memory) {
-        Contribution[] memory _contributions = new Contribution[](
-            contributions.length
-        );
-        uint counter = 0;
-        for (uint i = 0; i < contributions.length; i++) {
-            if (contributions[i].campaignId == _campaignId) {
-                _contributions[counter] = contributions[i];
-                counter++;
-            }
-        }
-        return _contributions;
-    }
-
-    function claimFunds(uint _campaignId) public payable {
-        require(
-            campaigns[_campaignId].status == true,
-            "Campaign is not active"
-        );
-        require(
-            campaigns[_campaignId].campaignOwner == msg.sender,
-            "Only campaign owner can claim funds"
-        );
-        require(
-            campaigns[_campaignId].raisedAmount >=
-                campaigns[_campaignId].targetAmount,
-            "Campaign target amount not reached"
-        );
-        require(
-            block.timestamp * (1 days) >= campaigns[_campaignId].endDate,
-            "Campaign end date not reached"
-        );
-        campaigns[_campaignId].status = false;
-        campaigns[_campaignId].campaignOwner.transfer(
-            campaigns[_campaignId].raisedAmount
-        );
-    }
-
-    function getAllCampaigns() public view returns (Campaign[] memory) {
-        // returns all active campaigns which are NOT expired and NOT completed and NOT raised target amount
-        Campaign[] memory _campaigns = new Campaign[](campaigns.length);
-        uint counter = 0;
-        for (uint i = 0; i < campaigns.length; i++) {
-            if (
-                campaigns[i].status == true &&
-                block.timestamp * (1 days) <= campaigns[i].endDate &&
-                campaigns[i].raisedAmount < campaigns[i].targetAmount
-            ) {
-                _campaigns[counter] = campaigns[i];
-                counter++;
-            }
-        }
-        return _campaigns;
-    }
-
-    function getCampaignById(
+    function getParticularCampaign(
         uint _campaignId
     ) public view returns (Campaign memory) {
         return campaigns[_campaignId];
     }
 
+    function getCampaigns() public view returns (Campaign[] memory) {
+        return campaigns;
+    }
+
+    function getActiveCampaigns() public view returns (Campaign[] memory) {
+        uint activeCount = 0;
+        for (uint i = 0; i < campaigns.length; i++) {
+            if (campaigns[i].status == true) {
+                activeCount++;
+            }
+        }
+
+        Campaign[] memory activeCampaigns = new Campaign[](activeCount);
+        uint counter = 0;
+        for (uint i = 0; i < campaigns.length; i++) {
+            if (campaigns[i].status == true) {
+                activeCampaigns[counter] = campaigns[i];
+                counter++;
+            }
+        }
+        return activeCampaigns;
+    }
+
+    function getInactiveCampaigns() public view returns (Campaign[] memory) {
+        uint inactiveCount = 0;
+        for (uint i = 0; i < campaigns.length; i++) {
+            if (campaigns[i].status == false) {
+                inactiveCount++;
+            }
+        }
+
+        Campaign[] memory inactiveCampaigns = new Campaign[](inactiveCount);
+        uint counter = 0;
+        for (uint i = 0; i < campaigns.length; i++) {
+            if (campaigns[i].status == false) {
+                inactiveCampaigns[counter] = campaigns[i];
+                counter++;
+            }
+        }
+        return inactiveCampaigns;
+    }
+
     function deleteCampaign(uint _campaignId) public {
         require(
             campaigns[_campaignId].campaignOwner == msg.sender,
-            "Only campaign owner can delete campaign"
+            "You are not the owner of this campaign"
+        );
+        require(
+            campaigns[_campaignId].status == true,
+            "Campaign is already inactive"
         );
         campaigns[_campaignId].status = false;
     }
 
-    function getOwnerOfACampaign(
-        uint _campaignId
-    ) public view returns (address) {
-        return campaigns[_campaignId].campaignOwner;
+    function editCampaign(
+        uint _campaignId,
+        string memory _campaignTitle,
+        string memory _campaignDescription,
+        string memory _campaignImageCID,
+        uint _targetAmount,
+        uint _duration
+    ) public {
+        require(
+            campaigns[_campaignId].campaignOwner == msg.sender,
+            "You are not the owner of this campaign"
+        );
+        require(
+            campaigns[_campaignId].status == true,
+            "Campaign is already inactive"
+        );
+        campaigns[_campaignId].campaignTitle = _campaignTitle;
+        campaigns[_campaignId].campaignDescription = _campaignDescription;
+        campaigns[_campaignId].campaignImageCID = _campaignImageCID;
+        campaigns[_campaignId].targetAmount = _targetAmount;
+        campaigns[_campaignId].endAt = block.timestamp + _duration;
     }
 }

@@ -245,7 +245,6 @@ export default function ActiveCampaigns() {
     ]
   );
   const address = useAddress();
-  console.log("address active campaigns", address);
   const [createCampaignModal, setCreateCampaignModal] = useState(false);
   const [campaignsData, setCampaignsData] = useState([]);
   const { data, isLoading, error } = useContractRead(

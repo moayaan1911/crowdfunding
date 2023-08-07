@@ -378,13 +378,20 @@ const CreateCampaign = ({ showModal, closeModal }) => {
                 id: 2,
               });
               try {
+                console.log(
+                  title,
+                  description,
+                  campaignImage,
+                  targetAmount,
+                  duration
+                );
                 await mutateAsync({
                   args: [
-                    title,
-                    description,
-                    campaignImage,
+                    title.toString(),
+                    description.toString(),
+                    campaignImage.toString(),
                     ethers.utils.parseEther(targetAmount.toString()),
-                    duration,
+                    Number(duration),
                   ],
                 });
                 toast.success("Campaign created successfully!", {
