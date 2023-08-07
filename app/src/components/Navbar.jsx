@@ -12,7 +12,7 @@ export default function Navbar() {
       <ConnectWallet
         theme="light"
         auth={{
-          loginOptional: true,
+          loginOptional: false,
         }}
       />
     </nav>

@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 import Banner from "./components/Banner";
 import { useAddress } from "@thirdweb-dev/react";
 import ActiveCampaigns from "./components/ActiveCampaigns";
-
+const contractAddress = "0x0A87AEf652cb24350880de80c000d791071a7ee6";
 export default function App() {
   const address = useAddress();
   const desiredChainId = "0x5A2"; // Chain ID 1442 in hexadecimal

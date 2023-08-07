@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import Card from "./CardData";
-import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
-import { Toaster, toast } from "react-hot-toast";
-import CreateCampaign from "./CreateCampaign";
-import { useUser } from "@thirdweb-dev/react";
-export default function ActiveCampaigns() {
+import { MediaRenderer, useContract, useStorage } from "@thirdweb-dev/react";
+import React, { useState } from "react";
+import { toast } from "react-hot-toast";
+import { useContractWrite } from "@thirdweb-dev/react";
+import { ethers } from "ethers";
+
+const CreateCampaign = ({ showModal, closeModal }) => {
   const { contract } = useContract(
     "0x0A87AEf652cb24350880de80c000d791071a7ee6",
     [
@@ -83,11 +83,7 @@ export default function ActiveCampaigns() {
             name: "campaignDescription",
             type: "string",
           },
-          {
-            internalType: "string",
-            name: "_campaignImageCID",
-            type: "string",
-          },
+          { internalType: "string", name: "_campaignImageCID", type: "string" },
           { internalType: "uint256", name: "_targetAmount", type: "uint256" },
           { internalType: "uint256", name: "_duration", type: "uint256" },
         ],
@@ -112,11 +108,7 @@ export default function ActiveCampaigns() {
           {
             components: [
               { internalType: "uint256", name: "campaignId", type: "uint256" },
-              {
-                internalType: "string",
-                name: "campaignTitle",
-                type: "string",
-              },
+              { internalType: "string", name: "campaignTitle", type: "string" },
               {
                 internalType: "string",
                 name: "campaignDescription",
@@ -192,11 +184,7 @@ export default function ActiveCampaigns() {
           {
             components: [
               { internalType: "uint256", name: "campaignId", type: "uint256" },
-              {
-                internalType: "string",
-                name: "campaignTitle",
-                type: "string",
-              },
+              { internalType: "string", name: "campaignTitle", type: "string" },
               {
                 internalType: "string",
                 name: "campaignDescription",
@@ -244,117 +232,179 @@ export default function ActiveCampaigns() {
       },
     ]
   );
-  const address = useAddress();
-  console.log("address active campaigns", address);
-  const [createCampaignModal, setCreateCampaignModal] = useState(false);
-  const [campaignsData, setCampaignsData] = useState([]);
-  const { data, isLoading, error } = useContractRead(
+  const storage = useStorage();
+  const [campaignImage, setCampaignImage] = useState("");
+  const [imageSet, setImageSet] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [targetAmount, setTargetAmount] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const { mutateAsync, isLoading, error } = useContractWrite(
     contract,
-    "getAllCampaigns"
+    "createCampaign"
   );
-  const dataSets = [
-    {
-      id: 1,
-      imageUrl: "https://source.unsplash.com/150x300/?animals",
-      title: "Fundraiser for Animal Shelter",
-      description:
-        "Help raise money to build a new shelter for rescued animals",
-      createdAt: "August 5, 2022 3:45pm",
-    },
-    {
-      id: 2,
-      imageUrl: "https://source.unsplash.com/150x300/?school",
-      title: "School Supplies for Children",
-      description: "Donate to provide school supplies for kids in need",
-      createdAt: "August 1, 2022 12:30pm",
-    },
-    {
-      id: 3,
-      imageUrl: "https://source.unsplash.com/150x300/?home",
-      title: "Build Homes for Families",
-      description: "Help build affordable housing for low-income families",
-      createdAt: "July 30, 2022 9:15am",
-    },
-    {
-      id: 4,
-      imageUrl: "https://source.unsplash.com/150x300/?nature",
-      title: "Protect the Environment",
-      description: "Support initiatives to protect and preserve nature",
-      createdAt: "June 25, 2022 6:00pm",
-    },
-    {
-      id: 5,
-      imageUrl: "https://source.unsplash.com/150x300/?food",
-      title: "Feed the Hungry",
-      description: "Contribute to feeding programs for the less fortunate",
-      createdAt: "May 15, 2022 10:45am",
-    },
-    {
-      id: 6,
-      imageUrl: "https://source.unsplash.com/150x300/?education",
-      title: "Educate Underprivileged Children",
-      description:
-        "Support education for children from disadvantaged backgrounds",
-      createdAt: "April 2, 2022 2:20pm",
-    },
-    {
-      id: 7,
-      imageUrl: "https://source.unsplash.com/150x300/?water",
-      title: "Clean Water for All",
-      description: "Help provide clean and safe water to communities in need",
-      createdAt: "March 10, 2022 8:30am",
-    },
-  ];
 
-  async function showModal() {
-    if (address) {
-      setCreateCampaignModal(true);
-    } else {
-      toast.error("Wallet not connected");
+  const handleImageUpload = async (event) => {
+    try {
+      toast.loading("Uploading image...", {
+        id: 1,
+      });
+
+      const file = event.target.files[0];
+
+      if (!file) {
+        return; // User didn't select any file
+      }
+
+      // Assuming you want to upload the file to IPFS using the storage.upload function
+      const cid = await storage.upload(file);
+
+      // Set the campaignImage state to the IPFS CID
+      setCampaignImage(cid);
+      setImageSet(true);
+
+      toast.success("Image uploaded successfully!", {
+        id: 1,
+      });
+    } catch (error) {
+      toast.error("Error uploading image.", {
+        id: 1,
+      });
+      console.error(error);
     }
-  }
+  };
 
-  async function closeModal() {
-    setCreateCampaignModal(false);
-  }
-
-  async function getAllCampaigns() {
-    setCampaignsData(data);
-    console.log("data", data);
-  }
-  useEffect(() => {
-    getAllCampaigns();
-  }, [data]);
-  useEffect(() => {
-    getAllCampaigns();
-  }, []);
   return (
-    <>
-      <Toaster />
-      <div className="mt-20 md:text-left text-center">
-        <div className="flex md:w-full md:justify-between justify-center mx-auto flex-wrap-reverse w-1/2">
-          <h1 className="md:text-4xl md:font-semibold  md:mx-20 text-xl md:p-0 py-5">
-            Active Campaigns:
-          </h1>
-          <button className="relative md:mx-20 rounded-xl border-4 overflow-hidden group p-2 text-pink-500 font-semibold hover:text-white">
-            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-            <div className="absolute w-full h-full  bg-pink-500 left-0 top-0 transform -translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-            <div className="absolute w-full h-full   bg-pink-500 left-0 top-0 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-            <span className="relative z-10" onClick={showModal}>
-              Create Campaign
-            </span>
+    <div
+      className={`fixed top-0 left-0 h-screen w-screen bg-opacity-50 bg-black flex justify-center z-50 items-center ${
+        showModal ? "visible" : "invisible"
+      }`}
+    >
+      <div className="bg-white p-4 rounded-lg max-w-xl w-full">
+        {/* Heading */}
+        <h2 className="text-center text-2xl font-semibold mb-4 border-b-2 border-pink-500 pb-2">
+          Create New Campaign
+        </h2>
+        <div className="flex flex-col md:flex-row justify-center items-center mb-4 md:space-x-4">
+          {/* Image Upload Option */}
+          <label className="relative mb-4 md:mb-0 text-center">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            <div className="w-24 h-24 md:w-36 md:h-36 border-2 border-dashed border-gray-400 rounded-lg flex justify-center items-center cursor-pointer">
+              {imageSet ? (
+                <MediaRenderer src={campaignImage} />
+              ) : (
+                <p>Upload Image</p>
+              )}
+            </div>
+          </label>
+          <div className="md:ml-4 w-full">
+            {/* Title */}
+            <label htmlFor="title" className="block mb-1 font-semibold">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 md:mb-4"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            {/* Description */}
+            <label htmlFor="description" className="block mb-1 font-semibold">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows="3"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 md:mb-4"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            {/* Target Amount */}
+            <label htmlFor="targetAmount" className="block mb-1 font-semibold">
+              Target Amount
+            </label>
+            <input
+              type="number"
+              id="targetAmount"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 md:mb-4"
+              value={targetAmount}
+              onChange={(e) => setTargetAmount(e.target.value)}
+            />
+            {/* Duration */}
+            <label htmlFor="duration" className="block mb-1 font-semibold">
+              Duration
+            </label>
+            <div className="relative">
+              <select
+                id="duration"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 md:mb-4"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+              >
+                <option value="">Select Duration</option>
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="4">4 days</option>
+                <option value="5">5 days</option>
+                <option value="6">6 days</option>
+                <option value="7">7 days</option>
+              </select>
+              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                Days
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          {/* Cancel Button */}
+          <button
+            className="bg-gray-400 text-white rounded-lg px-4 py-2 mr-2"
+            onClick={closeModal}
+          >
+            Cancel
+          </button>
+          {/* Create Button */}
+          <button
+            className="bg-pink-500 hover:bg-pink-600 text-white rounded-lg px-4 py-2"
+            onClick={async () => {
+              toast.loading("Creating campaign...", {
+                id: 2,
+              });
+              try {
+                await mutateAsync({
+                  args: [
+                    title,
+                    description,
+                    campaignImage,
+                    ethers.utils.parseEther(targetAmount.toString()),
+                    duration,
+                  ],
+                });
+                toast.success("Campaign created successfully!", {
+                  id: 2,
+                });
+              } catch (error) {
+                toast.error("Error creating campaign.", {
+                  id: 2,
+                });
+                console.error(error);
+              }
+              closeModal();
+            }}
+          >
+            Create
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
-          {dataSets.map((data) => (
-            <Card key={data.id} data={data} />
-          ))}
-        </div>
       </div>
-      {createCampaignModal && (
-        <CreateCampaign showModal={showModal} closeModal={closeModal} />
-      )}
-    </>
+    </div>
   );
-}
+};
+
+export default CreateCampaign;

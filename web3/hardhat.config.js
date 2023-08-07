@@ -45,10 +45,10 @@ module.exports = {
     //   url: process.env.RPC_URL,
     //   accounts: [process.env.PRIVATE_KEY],
     // },
-    zkevmtestnet: {
-      url: process.env.RPC_URL,
-      accounts: [process.env.PRIVATE_KEY],
-    },
+    // zkevmtestnet: {
+    //   url: process.env.RPC_URL,
+    //   accounts: [process.env.PRIVATE_KEY],
+    // },
   },
   gasReporter: {
     enabled: true,

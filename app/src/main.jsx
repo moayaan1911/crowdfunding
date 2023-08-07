@@ -36,7 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThirdwebProvider
       activeChain={activeChain}
-      clientId={clientId}
+      clientId={"09c4e70f62deeb54f83478b51e5839ac"}
       chainId={1442}
       supportedChains={[activeChain]}
       autoConnect={false}
