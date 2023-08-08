@@ -16,6 +16,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ramonak/react-progress-bar": "^5.0.3",
     "@thirdweb-dev/chains": "^0.1.42",
     "@thirdweb-dev/react": "^3.14.25",
     "@thirdweb-dev/sdk": "^3.10.44",

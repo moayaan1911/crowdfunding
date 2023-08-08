@@ -4,253 +4,18 @@ import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
 import { Toaster, toast } from "react-hot-toast";
 import CreateCampaign from "./CreateCampaign";
 import { useUser } from "@thirdweb-dev/react";
-export default function ActiveCampaigns() {
-  const { contract } = useContract(
-    "0x0A87AEf652cb24350880de80c000d791071a7ee6",
-    [
-      {
-        inputs: [],
-        name: "campaignId",
-        outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-        name: "campaigns",
-        outputs: [
-          { internalType: "uint256", name: "campaignId", type: "uint256" },
-          { internalType: "string", name: "campaignTitle", type: "string" },
-          {
-            internalType: "string",
-            name: "campaignDescription",
-            type: "string",
-          },
-          { internalType: "string", name: "campaignImageCID", type: "string" },
-          { internalType: "uint256", name: "targetAmount", type: "uint256" },
-          { internalType: "uint256", name: "raisedAmount", type: "uint256" },
-          { internalType: "uint256", name: "endDate", type: "uint256" },
-          { internalType: "bool", name: "status", type: "bool" },
-          {
-            internalType: "address payable",
-            name: "campaignOwner",
-            type: "address",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "claimFunds",
-        outputs: [],
-        stateMutability: "payable",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "contributeToCampaign",
-        outputs: [],
-        stateMutability: "payable",
-        type: "function",
-      },
-      {
-        inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-        name: "contributions",
-        outputs: [
-          { internalType: "uint256", name: "campaignId", type: "uint256" },
-          { internalType: "uint256", name: "contributionId", type: "uint256" },
-          { internalType: "uint256", name: "amount", type: "uint256" },
-          { internalType: "uint256", name: "date", type: "uint256" },
-          {
-            internalType: "address payable",
-            name: "contributor",
-            type: "address",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "string", name: "_campaignTitle", type: "string" },
-          {
-            internalType: "string",
-            name: "campaignDescription",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "_campaignImageCID",
-            type: "string",
-          },
-          { internalType: "uint256", name: "_targetAmount", type: "uint256" },
-          { internalType: "uint256", name: "_duration", type: "uint256" },
-        ],
-        name: "createCampaign",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "deleteCampaign",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-      {
-        inputs: [],
-        name: "getAllCampaigns",
-        outputs: [
-          {
-            components: [
-              { internalType: "uint256", name: "campaignId", type: "uint256" },
-              {
-                internalType: "string",
-                name: "campaignTitle",
-                type: "string",
-              },
-              {
-                internalType: "string",
-                name: "campaignDescription",
-                type: "string",
-              },
-              {
-                internalType: "string",
-                name: "campaignImageCID",
-                type: "string",
-              },
-              {
-                internalType: "uint256",
-                name: "targetAmount",
-                type: "uint256",
-              },
-              {
-                internalType: "uint256",
-                name: "raisedAmount",
-                type: "uint256",
-              },
-              { internalType: "uint256", name: "endDate", type: "uint256" },
-              { internalType: "bool", name: "status", type: "bool" },
-              {
-                internalType: "address payable",
-                name: "campaignOwner",
-                type: "address",
-              },
-            ],
-            internalType: "struct CrowdFunding.Campaign[]",
-            name: "",
-            type: "tuple[]",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "getAllContributionsForAParticularCampaign",
-        outputs: [
-          {
-            components: [
-              { internalType: "uint256", name: "campaignId", type: "uint256" },
-              {
-                internalType: "uint256",
-                name: "contributionId",
-                type: "uint256",
-              },
-              { internalType: "uint256", name: "amount", type: "uint256" },
-              { internalType: "uint256", name: "date", type: "uint256" },
-              {
-                internalType: "address payable",
-                name: "contributor",
-                type: "address",
-              },
-            ],
-            internalType: "struct CrowdFunding.Contribution[]",
-            name: "",
-            type: "tuple[]",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "getCampaignById",
-        outputs: [
-          {
-            components: [
-              { internalType: "uint256", name: "campaignId", type: "uint256" },
-              {
-                internalType: "string",
-                name: "campaignTitle",
-                type: "string",
-              },
-              {
-                internalType: "string",
-                name: "campaignDescription",
-                type: "string",
-              },
-              {
-                internalType: "string",
-                name: "campaignImageCID",
-                type: "string",
-              },
-              {
-                internalType: "uint256",
-                name: "targetAmount",
-                type: "uint256",
-              },
-              {
-                internalType: "uint256",
-                name: "raisedAmount",
-                type: "uint256",
-              },
-              { internalType: "uint256", name: "endDate", type: "uint256" },
-              { internalType: "bool", name: "status", type: "bool" },
-              {
-                internalType: "address payable",
-                name: "campaignOwner",
-                type: "address",
-              },
-            ],
-            internalType: "struct CrowdFunding.Campaign",
-            name: "",
-            type: "tuple",
-          },
-        ],
-        stateMutability: "view",
-        type: "function",
-      },
-      {
-        inputs: [
-          { internalType: "uint256", name: "_campaignId", type: "uint256" },
-        ],
-        name: "getOwnerOfACampaign",
-        outputs: [{ internalType: "address", name: "", type: "address" }],
-        stateMutability: "view",
-        type: "function",
-      },
-    ]
-  );
+import { ethers } from "ethers";
+export default function ActiveCampaigns({ contractAddress, abi }) {
+  async function getCurrentDateInSeconds() {
+    // return current date in seconds
+    return Math.floor(Date.now() / 1000);
+  }
+
+  const { contract } = useContract(contractAddress, abi);
   const address = useAddress();
   const [createCampaignModal, setCreateCampaignModal] = useState(false);
   const [campaignsData, setCampaignsData] = useState([]);
-  const { data, isLoading, error } = useContractRead(
-    contract,
-    "getAllCampaigns"
-  );
+  const { data, isLoading, error } = useContractRead(contract, "getCampaigns");
   const dataSets = [
     {
       id: 1,
@@ -318,8 +83,22 @@ export default function ActiveCampaigns() {
   }
 
   async function getAllCampaigns() {
-    setCampaignsData(data);
-    console.log("data", data);
+    // Filter for only active and ended
+    const campaigns = data.map((campaign) => {
+      return {
+        id: campaign.campaignId.toNumber(),
+        title: campaign.campaignTitle,
+        description: campaign.campaignDescription,
+        image: campaign.campaignImageCID,
+        target: ethers.utils.formatEther(campaign.targetAmount),
+        raised: ethers.utils.formatEther(campaign.raisedAmount),
+        startAt: campaign.startAt.toNumber(),
+        endAt: campaign.endAt.toNumber(),
+        status: campaign.status,
+        owner: campaign.campaignOwner,
+      };
+    });
+    setCampaignsData(campaigns);
   }
   useEffect(() => {
     getAllCampaigns();
@@ -346,13 +125,18 @@ export default function ActiveCampaigns() {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
-          {dataSets.map((data) => (
-            <Card key={data.id} data={data} />
+          {campaignsData.map((data) => (
+            <Card key={data.campaignId} data={data} />
           ))}
         </div>
       </div>
       {createCampaignModal && (
-        <CreateCampaign showModal={showModal} closeModal={closeModal} />
+        <CreateCampaign
+          showModal={showModal}
+          closeModal={closeModal}
+          contractAddress={contractAddress}
+          abi={abi}
+        />
       )}
     </>
   );
