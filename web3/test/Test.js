@@ -123,13 +123,40 @@ describe("CrowdFunding", function () {
       await crowdFunding.createCampaign(
         "Campaign 2",
         "Desc",
-        "CID",
+        "CID2",
         ethers.utils.parseEther("2.0"),
-        10
+        11
       );
 
       const campaigns = await crowdFunding.getCampaigns();
       expect(campaigns.length).to.equal(2);
+      expect(campaigns[0].campaignTitle).to.equal("Campaign 1");
+      expect(campaigns[1].campaignTitle).to.equal("Campaign 2");
+      expect(campaigns[0].campaignDescription).to.equal("Desc");
+      expect(campaigns[1].campaignDescription).to.equal("Desc");
+      expect(campaigns[0].campaignImageCID).to.equal("CID");
+      expect(campaigns[1].campaignImageCID).to.equal("CID2");
+      expect(campaigns[0].targetAmount).to.equal(
+        ethers.utils.parseEther("1.0")
+      );
+      expect(campaigns[1].targetAmount).to.equal(
+        ethers.utils.parseEther("2.0")
+      );
+      expect(campaigns[0].raisedAmount).to.equal(0);
+      expect(campaigns[1].raisedAmount).to.equal(0);
+      expect(campaigns[0].status).to.equal(true);
+      expect(campaigns[1].status).to.equal(true);
+      expect(campaigns[0].campaignOwner).to.equal(owner.address);
+      expect(campaigns[1].campaignOwner).to.equal(owner.address);
+      const endDate1 = await campaigns[0].endAt.toNumber();
+      const predictedEndDate1 = (await Math.floor(Date.now() / 1000)) + 10;
+      const fluctuation1 = endDate1 - predictedEndDate1;
+      await expect(fluctuation1).to.be.lessThan(500);
+      await expect(fluctuation1).to.be.greaterThan(-500);
+      const endDate2 = await campaigns[1].endAt.toNumber();
+      const predictedEndDate2 = (await Math.floor(Date.now() / 1000)) + 11;
+      const fluctuation2 = endDate2 - predictedEndDate2;
+      await expect(fluctuation2).to.be.lessThan(500);
     });
 
     it("Should return active campaigns", async function () {
@@ -144,13 +171,41 @@ describe("CrowdFunding", function () {
       await crowdFunding.createCampaign(
         "Campaign 2",
         "Desc",
-        "CID",
+        "CIDsdf",
         ethers.utils.parseEther("2.0"),
         10
       );
 
       const activeCampaigns = await crowdFunding.getActiveCampaigns();
       expect(activeCampaigns.length).to.equal(2);
+      expect(activeCampaigns[0].campaignTitle).to.equal("Campaign 1");
+      expect(activeCampaigns[1].campaignTitle).to.equal("Campaign 2");
+      expect(activeCampaigns[0].campaignDescription).to.equal("Desc");
+      expect(activeCampaigns[1].campaignDescription).to.equal("Desc");
+      expect(activeCampaigns[0].campaignImageCID).to.equal("CID");
+      expect(activeCampaigns[1].campaignImageCID).to.equal("CIDsdf");
+      expect(activeCampaigns[0].targetAmount).to.equal(
+        ethers.utils.parseEther("1.0")
+      );
+      expect(activeCampaigns[1].targetAmount).to.equal(
+        ethers.utils.parseEther("2.0")
+      );
+      expect(activeCampaigns[0].raisedAmount).to.equal(0);
+      expect(activeCampaigns[1].raisedAmount).to.equal(0);
+      expect(activeCampaigns[0].status).to.equal(true);
+      expect(activeCampaigns[1].status).to.equal(true);
+      expect(activeCampaigns[0].campaignOwner).to.equal(owner.address);
+      expect(activeCampaigns[1].campaignOwner).to.equal(owner.address);
+      const endDate1 = await activeCampaigns[0].endAt.toNumber();
+      const predictedEndDate1 = (await Math.floor(Date.now() / 1000)) + 10;
+      const fluctuation1 = endDate1 - predictedEndDate1;
+      await expect(fluctuation1).to.be.lessThan(500);
+      await expect(fluctuation1).to.be.greaterThan(-500);
+      const endDate2 = await activeCampaigns[1].endAt.toNumber();
+      const predictedEndDate2 = (await Math.floor(Date.now() / 1000)) + 10;
+      const fluctuation2 = endDate2 - predictedEndDate2;
+      await expect(fluctuation2).to.be.lessThan(500);
+      await expect(fluctuation2).to.be.greaterThan(-500);
     });
     it("Should return a particular campaign", async function () {
       await crowdFunding.createCampaign(
@@ -164,13 +219,24 @@ describe("CrowdFunding", function () {
       await crowdFunding.createCampaign(
         "Campaign 2",
         "Desc",
-        "CID",
+        "CIDasdf",
         ethers.utils.parseEther("2.0"),
-        10
+        30
       );
 
       const campaign = await crowdFunding.getParticularCampaign(1);
       expect(campaign.campaignTitle).to.equal("Campaign 2");
+      expect(campaign.campaignDescription).to.equal("Desc");
+      expect(campaign.campaignImageCID).to.equal("CIDasdf");
+      expect(campaign.targetAmount).to.equal(ethers.utils.parseEther("2.0"));
+      expect(campaign.raisedAmount).to.equal(0);
+      expect(campaign.status).to.equal(true);
+      expect(campaign.campaignOwner).to.equal(owner.address);
+      const endDate = await campaign.endAt.toNumber();
+      const predictedEndDate = (await Math.floor(Date.now() / 1000)) + 30;
+      const fluctuation = endDate - predictedEndDate;
+      await expect(fluctuation).to.be.lessThan(500);
+      await expect(fluctuation).to.be.greaterThan(-500);
     });
 
     it("Should delete a campaign", async function () {
@@ -193,6 +259,8 @@ describe("CrowdFunding", function () {
       await crowdFunding.deleteCampaign(1);
       const campaign = await crowdFunding.getParticularCampaign(1);
       expect(campaign.status).to.equal(false);
+      const otherCampaign = await crowdFunding.getParticularCampaign(0);
+      expect(otherCampaign.status).to.equal(true);
     });
 
     it("Should not delete a campaign if not owner", async function () {
@@ -251,15 +319,29 @@ describe("CrowdFunding", function () {
 
       await crowdFunding.createCampaign(
         "Campaign 2",
-        "Desc",
-        "CID",
+        "Desc2",
+        "CID2",
         ethers.utils.parseEther("2.0"),
-        10
+        21
       );
 
       await crowdFunding.deleteCampaign(1);
       const inactiveCampaigns = await crowdFunding.getInactiveCampaigns();
       expect(inactiveCampaigns.length).to.equal(1);
+      expect(inactiveCampaigns[0].campaignTitle).to.equal("Campaign 2");
+      expect(inactiveCampaigns[0].campaignDescription).to.equal("Desc2");
+      expect(inactiveCampaigns[0].campaignImageCID).to.equal("CID2");
+      expect(inactiveCampaigns[0].targetAmount).to.equal(
+        ethers.utils.parseEther("2.0")
+      );
+      expect(inactiveCampaigns[0].raisedAmount).to.equal(0);
+      expect(inactiveCampaigns[0].status).to.equal(false);
+      expect(inactiveCampaigns[0].campaignOwner).to.equal(owner.address);
+      const endDate = await inactiveCampaigns[0].endAt.toNumber();
+      const predictedEndDate = (await Math.floor(Date.now() / 1000)) + 21;
+      const fluctuation = endDate - predictedEndDate;
+      await expect(fluctuation).to.be.lessThan(500);
+      await expect(fluctuation).to.be.greaterThan(-500);
     });
 
     it("Should edit a campaign", async function () {
@@ -270,9 +352,17 @@ describe("CrowdFunding", function () {
         ethers.utils.parseEther("1.0"),
         10
       );
-      await crowdFunding.editCampaign(0, "Campaign 2", "Desc", "CID");
+      await crowdFunding.editCampaign(
+        0,
+        "Campaign 2",
+        "Descasdfad",
+        "CIDasdfasd"
+      );
       const campaign = await crowdFunding.getParticularCampaign(0);
       expect(campaign.campaignTitle).to.equal("Campaign 2");
+      expect(campaign.campaignDescription).to.equal("Descasdfad");
+      expect(campaign.campaignImageCID).to.equal("CIDasdfasd");
+      expect(campaign.targetAmount).to.equal(ethers.utils.parseEther("1.0"));
     });
     it("Should not edit a campaign if not owner", async function () {
       await crowdFunding.createCampaign(
@@ -301,6 +391,11 @@ describe("CrowdFunding", function () {
         .contribute(0, { value: ethers.utils.parseEther("0.1") });
       const campaign = await crowdFunding.getParticularCampaign(0);
       expect(campaign.raisedAmount).to.equal(ethers.utils.parseEther("0.1"));
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      const campaign2 = await crowdFunding.getParticularCampaign(0);
+      expect(campaign2.raisedAmount).to.equal(ethers.utils.parseEther("1.1"));
     });
     it("Should not contribute to a campaign if inactive", async function () {
       await crowdFunding.createCampaign(
@@ -373,6 +468,15 @@ describe("CrowdFunding", function () {
         .contribute(1, { value: ethers.utils.parseEther("1.0") });
       const contributions = await crowdFunding.getAllContributions();
       expect(contributions.length).to.equal(3);
+      expect(contributions[0].contributor).to.equal(addr1.address);
+      expect(contributions[1].contributor).to.equal(addr2.address);
+      expect(contributions[2].contributor).to.equal(addr2.address);
+      expect(contributions[0].campaignId).to.equal(0);
+      expect(contributions[1].campaignId).to.equal(0);
+      expect(contributions[2].campaignId).to.equal(1);
+      expect(contributions[0].amount).to.equal(ethers.utils.parseEther("1.0"));
+      expect(contributions[1].amount).to.equal(ethers.utils.parseEther("1.0"));
+      expect(contributions[2].amount).to.equal(ethers.utils.parseEther("1.0"));
     });
     it("Should get all contributions of a campaign", async function () {
       await crowdFunding.createCampaign(
