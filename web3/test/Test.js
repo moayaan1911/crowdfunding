@@ -261,5 +261,289 @@ describe("CrowdFunding", function () {
       const inactiveCampaigns = await crowdFunding.getInactiveCampaigns();
       expect(inactiveCampaigns.length).to.equal(1);
     });
+
+    it("Should edit a campaign", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+      await crowdFunding.editCampaign(0, "Campaign 2", "Desc", "CID");
+      const campaign = await crowdFunding.getParticularCampaign(0);
+      expect(campaign.campaignTitle).to.equal("Campaign 2");
+    });
+    it("Should not edit a campaign if not owner", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+      await expect(
+        crowdFunding.connect(addr1).editCampaign(0, "Campaign 2", "Desc", "CID")
+      ).to.be.revertedWith("You are not the owner of this campaign");
+    });
+  });
+  describe("Contributions", function () {
+    it("Should contribute to a campaign", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("0.1") });
+      const campaign = await crowdFunding.getParticularCampaign(0);
+      expect(campaign.raisedAmount).to.equal(ethers.utils.parseEther("0.1"));
+    });
+    it("Should not contribute to a campaign if inactive", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+      await crowdFunding.deleteCampaign(0);
+      await expect(
+        crowdFunding
+          .connect(addr1)
+          .contribute(0, { value: ethers.utils.parseEther("0.1") })
+      ).to.be.revertedWith("Campaign is Inactive");
+    });
+    it("Should not contribute to a campaign if target is reached", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("1.0"),
+        10
+      );
+
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.2") });
+      await expect(
+        crowdFunding
+          .connect(addr2)
+          .contribute(0, { value: ethers.utils.parseEther("1.0") })
+      ).to.be.revertedWith("Target amount reached");
+    });
+    it("Shuold get all contributions", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+      await crowdFunding
+        .connect(addr1)
+        .createCampaign(
+          "Campaign 2",
+          "Desc",
+          "CID",
+          ethers.utils.parseEther("2.0"),
+          10
+        );
+      await crowdFunding
+        .connect(addr1)
+        .createCampaign(
+          "Campaign 3",
+          "Desc",
+          "CID",
+          ethers.utils.parseEther("2.0"),
+          10
+        );
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(1, { value: ethers.utils.parseEther("1.0") });
+      const contributions = await crowdFunding.getAllContributions();
+      expect(contributions.length).to.equal(3);
+    });
+    it("Should get all contributions of a campaign", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+      await crowdFunding
+        .connect(addr1)
+        .createCampaign(
+          "Campaign 2",
+          "Desc",
+          "CID",
+          ethers.utils.parseEther("2.0"),
+          10
+        );
+      await crowdFunding
+        .connect(addr1)
+        .createCampaign(
+          "Campaign 3",
+          "Desc",
+          "CID",
+          ethers.utils.parseEther("2.0"),
+          10
+        );
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(1, { value: ethers.utils.parseEther("1.0") });
+      const contributions =
+        await crowdFunding.getAllContributionsForParticularCampaign(0);
+      expect(contributions.length).to.equal(2);
+      expect(contributions[0].contributor).to.equal(addr1.address);
+      expect(contributions[1].contributor).to.equal(addr2.address);
+      const contributions2 =
+        await crowdFunding.getAllContributionsForParticularCampaign(1);
+      expect(contributions2.length).to.equal(1);
+      expect(contributions2[0].contributor).to.equal(addr2.address);
+    });
+    it("Should get total contributions count", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      const totalContributions = await crowdFunding.totalContributions();
+      expect(totalContributions).to.equal(2);
+    });
+    it("Should be able to claim the contribution", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+
+      await crowdFunding.claimContribution(0);
+      const campaign = await crowdFunding.getParticularCampaign(0);
+
+      expect(campaign.raisedAmount).to.equal(ethers.utils.parseEther("2.0"));
+      expect(campaign.status).to.equal(false);
+    });
+    it("Should not be able to claim the contribution if not owner", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+
+      await expect(
+        crowdFunding.connect(addr2).claimContribution(0)
+      ).to.be.revertedWith("You are not the owner of this campaign");
+    });
+    it("Should not be able to claim the contribution if not active", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+      await crowdFunding.deleteCampaign(0);
+      const campaign = await crowdFunding.getParticularCampaign(0);
+      await expect(crowdFunding.claimContribution(0)).to.be.revertedWith(
+        "Campaign is Inactive"
+      );
+    });
+    it("Should not be able to claim the contribution if target is not reached", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("3.0"),
+        10
+      );
+      await crowdFunding.connect(addr1).contribute(0, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+      await expect(crowdFunding.claimContribution(0)).to.be.revertedWith(
+        "Target amount not reached"
+      );
+    });
+    it("Should check if ONLY the raised amount of the particular campaign is claimed, rest all balance is STILL secured in the contract ", async function () {
+      await crowdFunding.createCampaign(
+        "Campaign 1",
+        "Desc",
+        "CID",
+        ethers.utils.parseEther("2.0"),
+        10
+      );
+
+      await crowdFunding
+        .connect(addr1)
+        .createCampaign(
+          "Campaign 2",
+          "Desc",
+          "CID",
+          ethers.utils.parseEther("2.0"),
+          10
+        );
+
+      await crowdFunding
+        .connect(addr1)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+      await crowdFunding
+        .connect(addr2)
+        .contribute(0, { value: ethers.utils.parseEther("1.0") });
+
+      await crowdFunding.connect(addr2).contribute(1, {
+        value: ethers.utils.parseEther("3.0"),
+      });
+
+      await crowdFunding.claimContribution(0);
+
+      const contractBalance = await ethers.provider.getBalance(
+        crowdFunding.address
+      );
+      expect(contractBalance).to.equal(ethers.utils.parseEther("3.0"));
+    });
   });
 });

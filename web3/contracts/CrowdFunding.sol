@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
-import "hardhat/console.sol";
 
 contract CrowdFunding {
     struct Campaign {
@@ -29,6 +28,7 @@ contract CrowdFunding {
     Contribution[] public contributions;
 
     uint private campaignId = 0;
+    uint private contributionId = 0;
 
     event CampaignCreated(uint campaignId, uint createdAt);
 
@@ -127,22 +127,82 @@ contract CrowdFunding {
         uint _campaignId,
         string memory _campaignTitle,
         string memory _campaignDescription,
-        string memory _campaignImageCID,
-        uint _targetAmount,
-        uint _duration
+        string memory _campaignImageCID
     ) public {
         require(
             campaigns[_campaignId].campaignOwner == msg.sender,
             "You are not the owner of this campaign"
         );
-        require(
-            campaigns[_campaignId].status == true,
-            "Campaign is already inactive"
-        );
+        require(campaigns[_campaignId].status == true, "Campaign is Inactive");
         campaigns[_campaignId].campaignTitle = _campaignTitle;
         campaigns[_campaignId].campaignDescription = _campaignDescription;
         campaigns[_campaignId].campaignImageCID = _campaignImageCID;
-        campaigns[_campaignId].targetAmount = _targetAmount;
-        campaigns[_campaignId].endAt = block.timestamp + _duration;
+    }
+
+    function contribute(uint _campaignID) public payable {
+        require(campaigns[_campaignID].status == true, "Campaign is Inactive");
+        require(
+            campaigns[_campaignID].raisedAmount <=
+                campaigns[_campaignID].targetAmount,
+            "Target amount reached"
+        );
+        campaigns[_campaignID].raisedAmount += msg.value;
+        contributions.push(
+            Contribution(
+                _campaignID,
+                contributionId,
+                msg.value,
+                block.timestamp,
+                payable(msg.sender)
+            )
+        );
+        contributionId++;
+    }
+
+    function getAllContributions() public view returns (Contribution[] memory) {
+        return contributions;
+    }
+
+    function getAllContributionsForParticularCampaign(
+        uint _campaignId
+    ) public view returns (Contribution[] memory) {
+        uint count = 0;
+        for (uint i = 0; i < contributions.length; i++) {
+            if (contributions[i].campaignId == _campaignId) {
+                count++;
+            }
+        }
+
+        Contribution[] memory campaignContributions = new Contribution[](count);
+        uint counter = 0;
+        for (uint i = 0; i < contributions.length; i++) {
+            if (contributions[i].campaignId == _campaignId) {
+                campaignContributions[counter] = contributions[i];
+                counter++;
+            }
+        }
+        return campaignContributions;
+    }
+
+    function totalContributions() public view returns (uint) {
+        return contributions.length;
+    }
+
+    function claimContribution(uint _campaignId) public {
+        require(campaigns[_campaignId].status == true, "Campaign is Inactive");
+        require(
+            campaigns[_campaignId].campaignOwner == msg.sender,
+            "You are not the owner of this campaign"
+        );
+        require(
+            campaigns[_campaignId].raisedAmount >=
+                campaigns[_campaignId].targetAmount,
+            "Target amount not reached"
+        );
+
+        campaigns[_campaignId].status = false;
+        campaigns[_campaignId].campaignOwner.transfer(
+            campaigns[_campaignId].raisedAmount
+        );
     }
 }
