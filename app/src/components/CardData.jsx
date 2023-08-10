@@ -25,6 +25,7 @@ const Card = ({ data }) => {
     .slice(0, 8);
 
   const gatewayUrl = `https://ipfs.io/ipfs/${url.split("//")[1]}`;
+  const dateInSeconds = Math.floor(new Date(data.endAt).getTime() / 1000);
   return (
     <>
       <Toaster />
@@ -46,6 +47,14 @@ const Card = ({ data }) => {
                 navigate(`/details/${hash}`, {
                   state: {
                     campaignId: data.id,
+                    title: data.title,
+                    description: data.description,
+                    image: data.image,
+                    target: data.target,
+                    raised: data.raised,
+                    endAt: dateInSeconds,
+                    status: data.status,
+                    owner: data.owner,
                   },
                 })
               }
