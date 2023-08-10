@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Banner from "./components/Banner";
 import { useAddress } from "@thirdweb-dev/react";
 import ActiveCampaigns from "./components/ActiveCampaigns";
+import InactiveCampaigns from "./components/InactiveCampaigns";
 const contractAddress = "0xAfA9c8376d384acE223828730b4594eC1Ef7Ab0F";
 const abi = [
   {
@@ -338,6 +339,7 @@ export default function App() {
       <Navbar />
       <Banner />
       <ActiveCampaigns contractAddress={contractAddress} abi={abi} />
+      <InactiveCampaigns contractAddress={contractAddress} abi={abi} />
     </div>
   );
 }

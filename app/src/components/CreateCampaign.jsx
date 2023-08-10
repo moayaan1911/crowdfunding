@@ -130,9 +130,6 @@ const CreateCampaign = ({ showModal, closeModal, contractAddress, abi }) => {
                 <option value="6">6 days</option>
                 <option value="7">7 days</option>
               </select>
-              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                Days
-              </span>
             </div>
           </div>
         </div>
@@ -152,12 +149,14 @@ const CreateCampaign = ({ showModal, closeModal, contractAddress, abi }) => {
                 id: 2,
               });
               try {
+                const currentTimeInSeconds = new Date().getTime() / 1000;
+                const durationInSeconds = Number(duration) * 24 * 60 * 60;
                 console.log(
                   title,
                   description,
                   campaignImage,
-                  targetAmount,
-                  duration
+                  Number(targetAmount),
+                  Number(duration)
                 );
                 await mutateAsync({
                   args: [
@@ -165,7 +164,7 @@ const CreateCampaign = ({ showModal, closeModal, contractAddress, abi }) => {
                     description.toString(),
                     campaignImage.toString(),
                     ethers.utils.parseEther(targetAmount.toString()),
-                    Number(duration),
+                    durationInSeconds,
                   ],
                 });
                 toast.success("Campaign created successfully!", {
