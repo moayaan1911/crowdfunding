@@ -1,11 +1,15 @@
 import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import { MdDeleteForever } from "react-icons/md";
 import { AiOutlineEdit } from "react-icons/ai";
 import { Toaster, toast } from "react-hot-toast";
+import { PiMaskSadLight } from "react-icons/pi";
+import Contribute from "./ContributionModal";
+import { utils } from "ethers";
 const contractAddress = "0xAfA9c8376d384acE223828730b4594eC1Ef7Ab0F";
+
 const abi = [
   {
     anonymous: false,
@@ -304,6 +308,7 @@ const abi = [
 ];
 export default function Details() {
   const { contract } = useContract(contractAddress, abi);
+
   const location = useLocation();
   const {
     campaignId,
@@ -319,7 +324,44 @@ export default function Details() {
   const date = new Date(endAt * 1000).toLocaleDateString();
   const gatewayUrl = `https://ipfs.io/ipfs/${image.split("//")[1]}`;
   const address = useAddress();
-  async function deleteFuncion() {}
+  const [contribution, setContribution] = useState([]);
+  const [contributionModal, setContributionModal] = useState(false);
+  const {
+    data: contributions,
+    isLoading,
+    isError,
+  } = useContractRead(contract, "getAllContributionsForParticularCampaign", [
+    campaignId,
+  ]);
+  async function getAllContributions() {
+    if (contributions) {
+      const filter = contributions.map((data) => {
+        return {
+          id: data.contributionId.toNumber(),
+          amount: utils.formatEther(data.amount),
+          contributor: data.contributor.toString(),
+          date: data.date.toNumber() * 1000,
+        };
+      });
+      setContribution(filter);
+    }
+  }
+
+  console.log(contribution);
+  useEffect(() => {
+    getAllContributions();
+  }, []);
+  useEffect(() => {
+    getAllContributions();
+  }, [contributions]);
+
+  async function contributeToCampaign() {
+    if (!address) {
+      toast.error("Connect Wallet to Contribute to a campaign");
+    } else {
+      setContributionModal(true);
+    }
+  }
   const connectToZkEVMTestnet = async () => {
     const desiredChainId = "0x5A2"; // Chain ID 1442 in hexadecimal
     if (address) {
@@ -350,7 +392,6 @@ export default function Details() {
   useEffect(() => {
     connectToZkEVMTestnet();
   }, [address]);
-
   return (
     <>
       <Toaster />
@@ -364,7 +405,7 @@ export default function Details() {
         </div>
 
         <div className="flex flex-col md:w-80 w-full justify-between text-center md:text-left mt-10 md:m-0">
-          <div className="md:h-1/2 h-2/3 border-b-2 border-pink-400 flex flex-col justify-around">
+          <div className="md:h-1/2 h-2/3 border-b-8 border-pink-400 flex flex-col justify-around">
             <h2 className="text-3xl font-bold mb-5">
               {title}
               {address == owner && (
@@ -372,7 +413,7 @@ export default function Details() {
                   <button className="px-1">
                     <AiOutlineEdit className="text-4xl text-gray-600" />
                   </button>
-                  <button onClick={deleteFuncion}>
+                  <button>
                     <MdDeleteForever className="text-4xl text-red-600" />
                   </button>
                 </>
@@ -393,12 +434,69 @@ export default function Details() {
                 {owner.slice(0, 15)}...{owner.slice(32)}
               </a>
             </div>
-            <div>Target : {target} ETH</div>
-            <div>Raised {raised} ETH</div>
+            {/* <div>Target : {target} ETH</div> */}
+            {/* <div>Raised {raised} ETH</div> */}
             <div>Ends on : {date}</div>
           </div>
         </div>
       </div>
+      <div className="my-14 flex md:justify-end justify-center md:w-4/5 w-full">
+        {address == owner && (
+          <button className="bg-white text-red-600 hover:bg-red-500 hover:text-white  p-3 mx-5 rounded-lg font-semibold">
+            Claim Contribution
+          </button>
+        )}
+        <button
+          className="bg-pink-300 text-black p-3 rounded-lg font-semibold hover:bg-purple-900 hover:text-white"
+          onClick={contributeToCampaign}
+        >
+          Contribute to this Campaign
+        </button>
+        <Contribute
+          open={contributionModal}
+          onClose={() => setContributionModal(false)}
+          campaignTitle={title}
+          owner={owner}
+          campaignId={campaignId}
+          contractAddress={contractAddress}
+          abi={abi}
+        />
+      </div>
+      {contribution.length > 0 && (
+        <div className="overflow-x-auto sm:overflow-x-visible w-4/5 mx-auto mt-20">
+          <table className="w-full md:text-sm text-left text-gray-500 text-xs">
+            <thead className="text-xs text-white uppercase bg-gray-800">
+              <tr>
+                <th scope="col" className="md:px-6 px-2 py-3">
+                  Wallet Address
+                </th>
+                <th scope="col" className="md:px-6 px-2 py-3">
+                  Amount
+                </th>
+                <th scope="col" className="md:px-6 px-2 py-3">
+                  Date
+                </th>
+              </tr>
+            </thead>
+            <tbody className="max-h-96 h-10 overflow-y-auto">
+              {contribution.map((contri) => (
+                <tr key={contri.id} className="">
+                  <td className="md:px-6 px-2 py-3">{contri.contributor}</td>
+                  <td className="md:pl-7 px-2 py-3">{contri.amount} ETH</td>
+                  <td className="md:px-6 px-2 py-3">
+                    {new Date(contri.date).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {contribution.length == 0 && (
+        <div className="my-10 text-center text-pink-500 text-3xl font-bold flex justify-center">
+          <PiMaskSadLight /> No contributions made yet <PiMaskSadLight />
+        </div>
+      )}
     </>
   );
 }
