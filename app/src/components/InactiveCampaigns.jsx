@@ -39,7 +39,7 @@ export default function InactiveCampaigns({ contractAddress, abi }) {
 
   return (
     <div>
-      <h1 className="md:text-4xl md:font-semibold text-gray-600  md:mx-20 text-xl md:p-0 py-5 mt-20">
+      <h1 className="md:text-4xl md:font-semibold text-gray-600  md:mx-20 text-xl md:p-0 py-5 mt-20 md:text-left text-center">
         Past Campaigns:
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
