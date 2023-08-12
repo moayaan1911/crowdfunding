@@ -1,8 +1,8 @@
 # zkFund
 
-**Video:** [Deployed dApp Demo]()
+**Video:** [Deployed dApp Demo](https://youtu.be/jGEStOsKON0)
 
-**Live Site:** [https://mycrowdfundingdapp.com]()  
+**Live Site:** [https://zkfund.vercel.app/](https://zkfund.vercel.app/)  
 
 ## Preview
 
@@ -20,7 +20,7 @@
 
 ## Description
 
-Decentralized crowdfunding platform built on zkEVM allowing creators to raise funds for projects in a transparent and secure manner.
+zkFund is a Decentralized crowdfunding platform built on zkEVM allowing creators to raise funds for projects in a transparent and secure manner.
 
 ## Features
 

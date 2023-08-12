@@ -10,7 +10,7 @@ export default function Footer() {
             className="cursor-pointer underline"
             target="_blank"
             rel="noreferrer"
-            href="https://moayaan.taplink.ws/"
+            href="https://linktr.ee/ayaaneth"
           >
             moayaan.eth
           </a>
@@ -22,7 +22,7 @@ export default function Footer() {
             className=" text-white px-4 py-2 mr-2 cursor-pointer"
             target="_blank"
             rel="noreferrer"
-            href=""
+            href="https://youtu.be/jGEStOsKON0"
           >
             Video Demo
           </a>
