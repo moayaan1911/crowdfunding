@@ -43,6 +43,7 @@ export default function ActiveCampaigns({ contractAddress, abi }) {
       (campaign) => campaign.status === true && campaign.endAt > today
     );
     setCampaignsData(activeCampaigns);
+    console.log(activeCampaigns);
   }
   useEffect(() => {
     getAllCampaigns();
@@ -70,7 +71,12 @@ export default function ActiveCampaigns({ contractAddress, abi }) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 p-4">
           {campaignsData.map((data) => (
-            <Card key={data.campaignId} data={data} />
+            <Card
+              key={data.campaignId}
+              data={data}
+              contractAddress={contractAddress}
+              abi={abi}
+            />
           ))}
         </div>
       </div>

@@ -5,7 +5,8 @@ import ProgressBar from "@ramonak/react-progress-bar";
 import { ethers } from "ethers";
 import { Toaster, toast } from "react-hot-toast";
 import { useAddress } from "@thirdweb-dev/react";
-const Card = ({ data }) => {
+import Contribute from "./ContributionModal";
+const Card = ({ data, contractAddress, abi }) => {
   const address = useAddress();
   const [contributeModal, setContributeModal] = useState(false);
   async function handleContribute() {
@@ -70,6 +71,15 @@ const Card = ({ data }) => {
             >
               Contribute
             </button>
+            <Contribute
+              open={contributeModal}
+              onClose={() => setContributeModal(false)}
+              campaignTitle={data.title}
+              owner={data.owner}
+              campaignId={data.id}
+              contractAddress={contractAddress}
+              abi={abi}
+            />
           </div>
         </div>
         <div className="px-6 py-4">

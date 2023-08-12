@@ -3,6 +3,7 @@ import { utils } from "ethers";
 import { useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import ConfettiExplosion from "react-confetti-explosion";
+import { useNavigate } from "react-router-dom";
 function Contribute({
   open,
   onClose,
@@ -13,6 +14,7 @@ function Contribute({
   abi,
 }) {
   const { contract } = useContract(contractAddress, abi);
+  const navigate = useNavigate();
   const {
     mutateAsync: contributeCall,
     isLoading,
@@ -77,6 +79,12 @@ function Contribute({
                     id: 2,
                   });
                   setConfettiCelebration(true);
+                  onClose();
+                  setAmount("");
+                  setTimeout(() => {
+                    // Code to run
+                    navigate("/");
+                  }, 5000);
                 } catch (error) {
                   toast.error("Error contributing to campaign campaign.", {
                     id: 2,

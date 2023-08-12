@@ -1,6 +1,11 @@
-import { useAddress, useContract, useContractRead } from "@thirdweb-dev/react";
+import {
+  useAddress,
+  useContract,
+  useContractRead,
+  useContractWrite,
+} from "@thirdweb-dev/react";
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { MdDeleteForever } from "react-icons/md";
 import { AiOutlineEdit } from "react-icons/ai";
@@ -8,6 +13,8 @@ import { Toaster, toast } from "react-hot-toast";
 import { PiMaskSadLight } from "react-icons/pi";
 import Contribute from "./ContributionModal";
 import { utils } from "ethers";
+import DeleteCampaign from "./DeleteModal";
+import EditCampaign from "./EditModal";
 const contractAddress = "0xAfA9c8376d384acE223828730b4594eC1Ef7Ab0F";
 
 const abi = [
@@ -307,6 +314,7 @@ const abi = [
   },
 ];
 export default function Details() {
+  const navigate = useNavigate();
   const { contract } = useContract(contractAddress, abi);
 
   const location = useLocation();
@@ -326,6 +334,8 @@ export default function Details() {
   const address = useAddress();
   const [contribution, setContribution] = useState([]);
   const [contributionModal, setContributionModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
   const {
     data: contributions,
     isLoading,
@@ -333,6 +343,7 @@ export default function Details() {
   } = useContractRead(contract, "getAllContributionsForParticularCampaign", [
     campaignId,
   ]);
+
   async function getAllContributions() {
     if (contributions) {
       const filter = contributions.map((data) => {
@@ -346,7 +357,25 @@ export default function Details() {
       setContribution(filter);
     }
   }
+  const { mutateAsync: contributeCall } = useContractWrite(
+    contract,
+    "claimContribution"
+  );
+  async function editFunction() {
+    if (!address) {
+      toast.error("Connect Wallet to delete");
+      return;
+    }
+    setEditModal(true);
+  }
 
+  async function deleteFunction() {
+    if (!address) {
+      toast.error("Connect Wallet to delete");
+      return;
+    }
+    setDeleteModal(true);
+  }
   console.log(contribution);
   useEffect(() => {
     getAllContributions();
@@ -392,6 +421,7 @@ export default function Details() {
   useEffect(() => {
     connectToZkEVMTestnet();
   }, [address]);
+  console.log(raised);
   return (
     <>
       <Toaster />
@@ -400,8 +430,11 @@ export default function Details() {
         Details Page
       </div>
       <div className="flex flex-wrap w-5/6  mx-auto p-0 md:pl-20">
-        <div className="">
-          <img src={gatewayUrl} className="md:w-4/5 rounded-2xl" />
+        <div className="md:w-1/2 w-full">
+          <img
+            src={gatewayUrl}
+            className="md:w-4/5 rounded-2xl min-w-full md:min-w-0"
+          />
         </div>
 
         <div className="flex flex-col md:w-80 w-full justify-between text-center md:text-left mt-10 md:m-0">
@@ -410,12 +443,30 @@ export default function Details() {
               {title}
               {address == owner && (
                 <>
-                  <button className="px-1">
+                  <button className="px-1" onClick={editFunction}>
                     <AiOutlineEdit className="text-4xl text-gray-600" />
                   </button>
-                  <button>
+                  <EditCampaign
+                    open={editModal}
+                    onClose={() => setEditModal(false)}
+                    campaignId={campaignId}
+                    contractAddress={contractAddress}
+                    abi={abi}
+                    title={title}
+                    description={description}
+                    image={image}
+                  />
+                  <button onClick={deleteFunction}>
                     <MdDeleteForever className="text-4xl text-red-600" />
                   </button>
+                  <DeleteCampaign
+                    open={deleteModal}
+                    onClose={() => setDeleteModal(false)}
+                    owner={owner}
+                    campaignId={campaignId}
+                    contractAddress={contractAddress}
+                    abi={abi}
+                  />
                 </>
               )}
             </h2>
@@ -434,15 +485,44 @@ export default function Details() {
                 {owner.slice(0, 15)}...{owner.slice(32)}
               </a>
             </div>
-            {/* <div>Target : {target} ETH</div> */}
-            {/* <div>Raised {raised} ETH</div> */}
+            <div>Target : {target} ETH</div>
+            <div>Raised {raised} ETH</div>
             <div>Ends on : {date}</div>
           </div>
         </div>
       </div>
       <div className="my-14 flex md:justify-end justify-center md:w-4/5 w-full">
         {address == owner && (
-          <button className="bg-white text-red-600 hover:bg-red-500 hover:text-white  p-3 mx-5 rounded-lg font-semibold">
+          <button
+            className="bg-white text-red-600 hover:bg-red-500 hover:text-white  p-3 mx-5 rounded-lg font-semibold"
+            onClick={async () => {
+              if (raised < target) {
+                toast.error("Target not reached");
+                return;
+              }
+
+              toast.loading("Claiming Contribution", {
+                id: 2,
+              });
+              try {
+                await contributeCall({
+                  args: [campaignId],
+                });
+                toast.success("Claimed Succesfully", {
+                  id: 2,
+                });
+
+                setTimeout(() => {
+                  navigate("/");
+                }, 5000);
+              } catch (error) {
+                toast.error("Error Claiming campaign.", {
+                  id: 2,
+                });
+                console.error(error);
+              }
+            }}
+          >
             Claim Contribution
           </button>
         )}
