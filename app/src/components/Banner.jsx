@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import banner from '../assets/charity.jpeg';
-import Modal from './Modal';
 export default function Banner() {
   return (
     <div className='flex items-center justify-center flex-wrap-reverse w-auto'>
