@@ -1,46 +1,32 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { ThirdwebProvider } from "@thirdweb-dev/react";
-import App from "./App.jsx";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import "./index.css";
-import Details from "./components/Details.jsx";
+/** @format */
 
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { ThirdwebProvider } from '@thirdweb-dev/react';
+import App from './App.jsx';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './index.css';
+import Details from './components/Details.jsx';
+import { BinanceTestnet } from '@thirdweb-dev/chains';
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <App />,
   },
   {
-    path: "/details/:id",
+    path: '/details/:id',
     element: <Details />,
   },
 ]);
-const activeChain = {
-  chainId: 1442,
-  rpc: ["https://polygon-zkevm-testnet.rpc.thirdweb.com"],
-
-  nativeCurrency: {
-    decimals: 18,
-    name: "Ether",
-    symbol: "ETH",
-  },
-  shortName: "zkEVM testnet",
-  slug: "zkevmtest",
-  testnet: true,
-  chain: "Polygon",
-  name: "Polygon zkEVM Testnet",
-};
-const clientId = process.env.REACT_APP_THIRDWEB_CLIENT_ID;
-ReactDOM.createRoot(document.getElementById("root")).render(
+const activeChain = 'binance-testnet';
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThirdwebProvider
-      activeChain={activeChain}
-      clientId={"09c4e70f62deeb54f83478b51e5839ac"}
+      activeChain={'binance-testnet'}
+      clientId={'09c4e70f62deeb54f83478b51e5839ac'}
       chainId={1442}
-      supportedChains={[activeChain]}
-      autoConnect={false}
-    >
+      supportedChains={[BinanceTestnet]}
+      autoConnect={false}>
       <RouterProvider router={router} />
     </ThirdwebProvider>
   </React.StrictMode>
